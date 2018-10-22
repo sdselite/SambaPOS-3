@@ -21,6 +21,7 @@ namespace Samba.Infrastructure.Settings
         public string LogoPath { get; set; }
         public string DefaultHtmlReportHeader { get; set; }
         public string CurrentLanguage { get; set; }
+        public bool RecreateDatabase { get; set; }
         public bool OverrideLanguage { get; set; }
         public bool OverrideWindowsRegionalSettings { get; set; }
         public int DefaultRecordLimit { get; set; }
@@ -104,6 +105,12 @@ html
         {
             get { return _settingsObject.ConnectionString; }
             set { _settingsObject.ConnectionString = value; }
+        }
+
+        public static bool RecreateDatabase
+        {
+            get { return _settingsObject.RecreateDatabase; }
+            set { _settingsObject.RecreateDatabase = value; }
         }
 
         public static bool StartMessagingClient

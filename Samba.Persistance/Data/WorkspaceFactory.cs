@@ -5,6 +5,7 @@ using System.Data.Entity.Infrastructure;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using FluentMigrator.Runner;
 using FluentMigrator.Runner.Announcers;
 using FluentMigrator.Runner.Initialization;
@@ -102,7 +103,8 @@ namespace Samba.Persistance.Data
 
         public void InitializeDatabase(DataContext context)
         {
-            if (!context.Database.Exists())
+
+            if (!context.Database.Exists() || LocalSettings.RecreateDatabase)
             {
                 Create(context);
             }
@@ -113,43 +115,147 @@ namespace Samba.Persistance.Data
             //                Create(context);
             //            }
             //#else
+            
             else
             {
                 Migrate(context);
             }
             //#endif
-            var version = context.ObjContext().ExecuteStoreQuery<long>("select top(1) Version from VersionInfo order by version desc").FirstOrDefault();
-            LocalSettings.CurrentDbVersion = version;
+            LocalSettings.CurrentDbVersion = GetVersionNumber(context);
+        }
+
+        public static long GetVersionNumber(CommonDbContext context)
+        {
+            var version = context.ObjContext().ExecuteStoreQuery<long>("select top(1) Version from VersionInfo  order by version desc").FirstOrDefault();
+            return version;
         }
 
         private static void Create(CommonDbContext context)
         {
-            context.Database.Create();
-            context.ObjContext().ExecuteStoreCommand("CREATE TABLE VersionInfo (Version bigint not null)");
-            context.ObjContext().ExecuteStoreCommand("CREATE NONCLUSTERED INDEX IX_Tickets_LastPaymentDate ON Tickets(LastPaymentDate)");
-            context.ObjContext().ExecuteStoreCommand("CREATE UNIQUE INDEX IX_EntityStateValue_EntityId ON EntityStateValues (EntityId)");
-            context.ObjContext().SaveChanges();
-            GetMigrateVersions(context);
-            LocalSettings.CurrentDbVersion = LocalSettings.DbVersion;
+            try
+            {
+               
+                int versionNumber = 0;
+                if(LocalSettings.RecreateDatabase)
+                {
+                    if (context.Database.Exists())
+                    {
+                        context.ObjContext().DeleteDatabase();
+                    }
+                   
+                    versionNumber = 1;
+                }
+
+                //Note - there is a bug with setting the default command timeout in the connection string
+                //https://ttntuyen.wordpress.com/2017/05/30/entity-framework-the-wait-operation-timed-out/
+                ((IObjectContextAdapter)context).ObjectContext.CommandTimeout = 60 * 15;
+                try
+                {
+                    context.Database.CreateIfNotExists();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        // If we are connecting to an Azure database it tends to timeout before the tables are created
+                        if (context.Database.Exists())
+                        {
+                            //Wait ten seconds to give Azure time to complete
+                            Thread.Sleep(10000);
+                            var dbScript = context.ObjContext().CreateDatabaseScript();
+                            var result = context.ObjContext().ExecuteStoreCommand(dbScript);
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+
+                        throw;
+                    }
+                   
+                }
+              
+                ExecuteCommandIfNotExists(context, "CREATE TABLE VersionInfo (Version bigint not null)", "VersionInfo");
+                ExecuteCommandIfNotExistsAndExists(context, "CREATE NONCLUSTERED INDEX IX_Tickets_LastPaymentDate ON Tickets(LastPaymentDate)", "IX_Tickets_LastPaymentDate", "Tickets");
+                ExecuteCommandIfNotExistsAndExists(context, "CREATE UNIQUE INDEX IX_EntityStateValue_EntityId ON EntityStateValues (EntityId)", "IX_EntityStateValue_EntityId", "EntityStateValues");
+                context.ObjContext().SaveChanges();
+                SetMigrateVersions(context);
+                LocalSettings.CurrentDbVersion = LocalSettings.DbVersion;
+            }
+            catch (Exception ex)
+            {
+
+                context.ObjContext().DeleteDatabase();
+
+            }
+
         }
 
-        private static void GetMigrateVersions(CommonDbContext context)
+
+        public static void ExecuteCommandIfNotExists(CommonDbContext context, string commandText, string objectName, string schemaName = "")
         {
+            if(DoesObjectExistInDatabase(context, objectName, schemaName) == false)
+            {
+                context.ObjContext().ExecuteStoreCommand(commandText);
+            }
+        }
+
+        public static void ExecuteCommandIfNotExistsAndExists(CommonDbContext context, string commandText, string notExistsObjectName, string existsObjectName, string schemaName = "")
+        {
+            if (DoesObjectExistInDatabase(context, existsObjectName, schemaName))
+            {
+                ExecuteCommandIfNotExists(context, commandText, notExistsObjectName, schemaName);
+            }
+        }
+
+        public static bool DoesObjectExistInDatabase(CommonDbContext context, string objectName, string objectSchemaName = "")
+        {
+            string queryUnformatted = @"select count(*) From
+                                        (
+                                            select sysobjects.[name], sysobjects.id, OBJECT_SCHEMA_NAME(id) as schema_name  from sysobjects
+                                            where lower(sysobjects.[name]) = lower('{0}')
+                                        ) as innerQuery
+                                        where lower('{1}') = '' OR lower('{1}') = schema_name";
+
+            var query = string.Format(queryUnformatted, objectName, objectSchemaName);
+            var queryResult = context.ObjContext().ExecuteStoreQuery<int>(query).FirstOrDefault();
+
+            return queryResult > 0;
+        }
+
+        private static void SetMigrateVersions(CommonDbContext context)
+        {
+         
             for (var i = 0; i < LocalSettings.DbVersion; i++)
             {
-                context.ObjContext().ExecuteStoreCommand("Insert into VersionInfo (Version) Values (" + (i + 1) + ")");
+                var versionNumber = (i + 1).ToString();
+                var queryText = "if Not Exists(select 'x' From  VersionInfo where Version = '" + versionNumber + "' ) begin  Insert into VersionInfo (Version) Values (" + versionNumber + ") end";
+
+                try
+                {
+                    context.ObjContext().ExecuteStoreCommand(queryText);
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
+                }
+           
             }
         }
 
         private static void Migrate(CommonDbContext context)
         {
-            if (!File.Exists(LocalSettings.UserPath + "\\migrate.txt")) return;
+            var migrateFileName = LocalSettings.UserPath + "\\migrate.txt";
+            if (!File.Exists(migrateFileName) && LocalSettings.RecreateDatabase == false) return;
 
-            var preVersion = context.ObjContext().ExecuteStoreQuery<long>("select top(1) Version from VersionInfo order by version desc").FirstOrDefault();
+
+            var preVersion = GetVersionNumber(context);
             var db = context.Database.Connection.ConnectionString.Contains(".sdf") ? "sqlserverce" : "sqlserver";
             if (preVersion < 18 && db == "sqlserverce") ApplyV16Fix(context);
 
             IAnnouncer announcer = new TextWriterAnnouncer(Console.Out);
+
+            var migrationAssemblyPath = LocalSettings.AppPath + "\\Samba.Persistance.DbMigration.dll";
 
             IRunnerContext migrationContext =
                 new RunnerContext(announcer)
@@ -157,12 +263,15 @@ namespace Samba.Persistance.Data
                     ApplicationContext = context,
                     Connection = context.Database.Connection.ConnectionString,
                     Database = db,
-                    Target = LocalSettings.AppPath + "\\Samba.Persistance.DbMigration.dll"
+                    Target = migrationAssemblyPath
                 };
 
             new TaskExecutor(migrationContext).Execute();
 
-            File.Delete(LocalSettings.UserPath + "\\migrate.txt");
+            if (File.Exists(migrateFileName))
+            {
+                File.Delete(migrateFileName);
+            }
         }
 
         private static void ApplyV16Fix(CommonDbContext context)
