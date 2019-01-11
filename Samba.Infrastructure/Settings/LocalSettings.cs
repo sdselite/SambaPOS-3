@@ -31,7 +31,7 @@ namespace Samba.Infrastructure.Settings
         public string ApiHost { get; set; }
         public string ApiPort { get; set; }
         public TimeSpan TokenLifeTime { get; set; }
-
+        public string TemplateName { get; set; }
         public string PrintFontFamily { get; set; }
 
         private readonly SerializableDictionary<string, string> _customSettings;
@@ -39,6 +39,8 @@ namespace Samba.Infrastructure.Settings
         {
             get { return _customSettings; }
         }
+
+        
 
         public SettingsObject()
         {
@@ -111,6 +113,12 @@ html
         {
             get { return _settingsObject.RecreateDatabase; }
             set { _settingsObject.RecreateDatabase = value; }
+        }
+
+        public static string TemplateName
+        {
+            get { return _settingsObject.TemplateName; }
+            set { _settingsObject.TemplateName = value; }
         }
 
         public static bool StartMessagingClient
@@ -208,10 +216,13 @@ html
         public static string AppPath { get; set; }
         public static string DocumentPath { get { return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\" + AppName; } }
 
-        public static string DataPath { get { return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\Ozgu Tech\\" + AppName; } }
-        public static string UserPath { get { return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\Ozgu Tech\\" + AppName; } }
+        public static string DataPath { get {
+                return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\SDS\\" + AppName;
+            } }
+        public static string UserPath { get { return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\SDS\\" + AppName; } }
 
-        public static string CommonSettingsFileName { get { return DataPath + "\\SambaSettings.txt"; } }
+        public static string CommonSettingsFileName { get {
+                return DataPath + "\\SambaSettings.txt"; } }
         public static string UserSettingsFileName { get { return UserPath + "\\SambaSettings.txt"; } }
 
         public static string SettingsFileName { get { return File.Exists(UserSettingsFileName) ? UserSettingsFileName : CommonSettingsFileName; } }

@@ -58,6 +58,8 @@
     <Compile Include="Common\DataGeneration\EntityCreator.cs" />
     <Compile Include="Common\DataGeneration\ParameterBuilder.cs" />
     <Compile Include="Common\DataGeneration\RuleGenerator.cs" />
+    <Compile Include="Common\DataGeneration\Templates\DefaultTemplate.cs" />
+    <Compile Include="Common\DataGeneration\Templates\LiquorStoreTemplate.cs" />
     <Compile Include="Common\OperationRequest.cs" />
     <Compile Include="Common\EventServiceFactory.cs" />
     <Compile Include="Common\EventTopicNames.cs" />
@@ -68,6 +70,7 @@
     <Compile Include="Common\PermissionRegistry.cs" />
     <Compile Include="IApplicationState.cs" />
     <Compile Include="IApplicationStateSetter.cs" />
+    <Compile Include="IDataTemplate.cs" />
     <Compile Include="IInventoryService.cs" />
     <Compile Include="IMethodQueue.cs" />
     <Compile Include="IEntityServiceClient.cs" />

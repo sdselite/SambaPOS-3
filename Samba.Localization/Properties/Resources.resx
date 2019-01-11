@@ -383,7 +383,7 @@ Changing PIN will hide this hint</value>
     <comment>DataGridTemplateColumn.Header</comment>
   </data>
   <data name="Portion" xml:space="preserve">
-    <value>Portion</value>
+    <value>Quantity</value>
     <comment>DataGridTemplateColumn.Header</comment>
   </data>
   <data name="PredictedInventory" xml:space="preserve">
@@ -525,7 +525,7 @@ Changing PIN will hide this hint</value>
     <comment>Label content</comment>
   </data>
   <data name="PortionPrices" xml:space="preserve">
-    <value>Portion Prices</value>
+    <value>Quantity Prices</value>
     <comment>GroupBox.Header</comment>
   </data>
   <data name="Multiplier" xml:space="preserve">
@@ -542,7 +542,7 @@ Changing PIN will hide this hint</value>
     <value>Product List</value>
   </data>
   <data name="MenuList" xml:space="preserve">
-    <value>Menu List</value>
+    <value>POS List</value>
   </data>
   <data name="BatchPriceList" xml:space="preserve">
     <value>Price List Editor</value>
@@ -584,7 +584,7 @@ Changing PIN will hide this hint</value>
     <value>Image Path</value>
   </data>
   <data name="MenuProperties" xml:space="preserve">
-    <value>Menu Properties</value>
+    <value>POS Properties</value>
   </data>
   <data name="NumeratorProperties" xml:space="preserve">
     <value>Numberpad Properties</value>
@@ -605,15 +605,15 @@ Changing PIN will hide this hint</value>
     <value>Wrap Text</value>
   </data>
   <data name="MenuName" xml:space="preserve">
-    <value>Menu Name</value>
+    <value>POS Name</value>
     <comment>Label.Content</comment>
   </data>
   <data name="MenuCategories" xml:space="preserve">
-    <value>Menu Categories</value>
+    <value>POS Categories</value>
     <comment>DataGridTextColumn.Header</comment>
   </data>
   <data name="Menu" xml:space="preserve">
-    <value>Menu</value>
+    <value>POS</value>
   </data>
   <data name="Categories" xml:space="preserve">
     <value>Categories</value>
@@ -1115,7 +1115,7 @@ Can't end Work Period while tickets open</value>
     <comment>Label content</comment>
   </data>
   <data name="Portions" xml:space="preserve">
-    <value>Portions</value>
+    <value>Quantities</value>
     <comment>GroupBox.Header</comment>
   </data>
   <data name="ExtraModifiers" xml:space="preserve">
@@ -1900,10 +1900,10 @@ Will Trigger after {1} days, {2} hours, {3} minutes</value>
     <value>Message Received</value>
   </data>
   <data name="MenuItemName" xml:space="preserve">
-    <value>Menu Item Name</value>
+    <value>POS Item Name</value>
   </data>
   <data name="PortionName" xml:space="preserve">
-    <value>Portion Name</value>
+    <value>Quantity Name</value>
   </data>
   <data name="LinesGroupedByTag" xml:space="preserve">
     <value>Lines Grouped by Tag</value>
@@ -3413,7 +3413,7 @@ Error Message:
     <value>Execute rule if</value>
   </data>
   <data name="MenuItemGroupCode" xml:space="preserve">
-    <value>Menu Item Group Code</value>
+    <value>POS Item Group Code</value>
   </data>
   <data name="Equal" xml:space="preserve">
     <value>Equals</value>
@@ -3549,5 +3549,18 @@ Error Message:
   </data>
   <data name="CallerIdDevice" xml:space="preserve">
     <value>Caller Id Device</value>
+  </data>
+  <data name="Chiller" xml:space="preserve">
+    <value>Chiller</value>
+    <comment>Label content</comment>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="LocationType" xml:space="preserve">
+    <value>LocationType</value>
+  </data>
+  <data name="Retail" xml:space="preserve">
+    <value>Retail</value>
   </data>
 </root>
